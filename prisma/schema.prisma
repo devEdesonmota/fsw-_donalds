@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * tabela restaurante
+ */
+model Restaurant {
+  id             String         @id @default(uuid())
+  name           String
+  slug           String
+  description    String
+  avatarImageUrl String
+  coverImageUrl  String
+  menuCategories MenuCategory[]
+  products       Product[]
+  orders         Order[]
+  createdAt      DateTime       @default(now())
+  updateAt       DateTime       @updatedAt
+}
+
+/**
+ * tabela menu
+ */
+model MenuCategory {
+  id           String     @id @default(uuid())
+  name         String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  products     Product[]
+  createdAt    DateTime   @default(now())
+  updateAt     DateTime   @updatedAt
+}
+
+/**
+ * tabela produtos
+ */
+model Product {
+  id             String         @id @default(uuid())
+  name           String
+  description    String
+  price          Float
+  imageUrl       String
+  ingredients    String[]
+  restaurant     Restaurant     @relation(fields: [restaurandId], references: [id])
+  restaurandId   String
+  orderProducts  OrderProduct[]
+  menuCategories MenuCategory   @relation(fields: [menuCategoryId], references: [id])
+  menuCategoryId String
+  createdAt      DateTime       @default(now())
+  updateAt       DateTime       @updatedAt
+}
+
+/**
+ * tabela de pedidos
+ */
+model Order {
+  id                Int               @id @default(autoincrement())
+  total             Float
+  status            OderStatus
+  restaurants       Restaurant        @relation(fields: [restaurantId], references: [id])
+  restaurantId      String
+  orderProducts     OrderProduct[]
+  consumptionMethod ConsumptionMethod
+  createdAt         DateTime          @default(now())
+  updateAt          DateTime          @updatedAt
+}
+
+model OrderProduct {
+  id        String   @id @default(uuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  orders    Order    @relation(fields: [orderId], references: [id])
+  orderId   Int
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+enum OderStatus {
+  PENDNG /*PEDIDO PENDENTE*/
+  IN_PREPARATION /*PEDIDO SENDO PREPARADO*/
+  FINISHED /*PEDIDO FINALIZADO*/
+}
+
+enum ConsumptionMethod {
+  TAKEAWAY /*LEVAR PARA VIAGEM*/
+  DINE_IN /*COMER NO LOCAL*/
+}
